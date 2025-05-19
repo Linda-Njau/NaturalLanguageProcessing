@@ -56,3 +56,11 @@ def train_epoch(net, dataloader, lr=0.01,optimizer=None,loss_fn=torch.nn.CrossEn
         if epoch_size and count>epoch_size:
             break
     return total_loss.item()/count, acc.item()/count
+
+def offsetify(b):
+     x = [torch.tensor(encode(t[1])) for t in b]
+     o = [0] + [len(t) for t in x]
+     o = torch.tensor(o[:-1]).cumsum(dim=0)
+     return( torch.LongTensor(o[:-1] for t in b), torch.cat(x), o)
+
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, collate_fn=offsetify, shuffle=True)
