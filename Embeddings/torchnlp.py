@@ -33,3 +33,26 @@ def encode(x,voc=None,unk=0,tokenizer=tokenizer):
         stoi = v.get_stoi()
         stoi_hash[v]=stoi
     return [stoi.get(s,unk)for s in tokenizer(x)]
+
+def train_epoch(net, dataloader, lr=0.01,optimizer=None,loss_fn=torch.nn.CrossEntropyLoss(),epoch_size=None, report_freq=200):
+    optimizer = optimizer or torch.optim.Adam(net.parameters(), lr=lr)
+    loss_fn = loss_fn.to(device)
+    net.train()
+    total_loss,acc,count,i = 0,0,0,0
+    for labels, features in dataloader:
+        optimizer.zero_grad()
+        features, labels = features.to(device), labels.to(device)
+        out = net(features)
+        loss = loss_fn(out, labels)
+        loss.backward()
+        optimizer.step()
+        total_loss+=loss
+        _,predicted = torch.max(out,1)
+        acc +=(predicted==labels).sum()
+        count+=len(labels)
+        i+=1
+        if i%report_freq==0:
+             print(f"{count}: acc={acc.item()/count}")
+        if epoch_size and count>epoch_size:
+            break
+    return total_loss.item()/count, acc.item()/count
