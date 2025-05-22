@@ -23,3 +23,14 @@ def load_dataset(ngrams=1,min_freq=1):
         counter.update(torchtext.data.utils.ngrams_iterator(tokenizer(line),ngrams=ngrams))
     vocab = torchtext.vocab.vocab(counter, min_freq=min_freq)
     return train_dataset,test_dataset,classes,vocab
+
+stoi_hash = {}
+def encode(x,voc=None,unk=0,tokenizer=tokenizer):
+    global stoi_hash
+    v = vocab if voc is None else voc
+    if v in stoi_hash.keys():
+        stoi = stoi_hash[v]
+    else:
+        stoi = v.get_stoi()
+        stoi_hash[v]=stoi
+    return [stoi.get(s,unk) for s in tokenizer(x)]
